@@ -105,6 +105,52 @@
         .loading { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4rem; }
         .spinner { width:40px; height:40px; border:4px solid rgba(255,255,255,0.3); border-top-color:#3b82f6; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:1rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Video play button for thumbnails */
+        .video-play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.7);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .video-play-btn:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        
+        .video-play-btn svg {
+            width: 30px;
+            height: 30px;
+            fill: white;
+        }
+        
+        /* Video container for hiding pop-out button */
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .video-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 30px;
+            background: rgba(0,0,0,0.95);
+            z-index: 10;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -259,29 +305,32 @@
         
         grid.innerHTML = filteredItems.map((item, index) => {
             if (item.type === 'photo') {
-                const imgSrc = `https://drive.google.com/thumbnail?id=${item.driveId}&sz=w1000`;
-                const fallbackSrc = `https://drive.google.com/uc?export=view&id=${item.driveId}`;
+                // Google Drive'dan görsel için doğru URL formatı
+                const imgSrc = `https://drive.google.com/uc?export=view&id=${item.driveId}`;
                 
                 return `<div class="portfolio-item" onclick="openModal(${index})">
                     <img 
                         src="${imgSrc}" 
                         alt="${item.title}"
                         loading="lazy"
-                        onerror="this.onerror=null; this.src='${fallbackSrc}';"
+                        style="width:100%; height:100%; object-fit:cover;"
+                        onerror="this.onerror=null; this.src='https://via.placeholder.com/400x600/333/fff?text=Görsel+Yüklenemedi';"
                     >
                 </div>`;
             } else {
-                // Video için preview
-                const previewImg = `https://drive.google.com/thumbnail?id=${item.driveId}&sz=w1000`;
+                // Video için thumbnail (Google Drive video thumbnail)
+                const thumbSrc = `https://drive.google.com/thumbnail?id=${item.driveId}&sz=w1000`;
+                
                 return `<div class="portfolio-item" onclick="openModal(${index})">
                     <img 
-                        src="${previewImg}" 
+                        src="${thumbSrc}" 
                         alt="${item.title}"
                         loading="lazy"
-                        style="object-fit:cover;"
+                        style="width:100%; height:100%; object-fit:cover;"
+                        onerror="this.onerror=null; this.src='https://via.placeholder.com/400x600/333/fff?text=Video+Önizleme';"
                     >
-                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.5); width:60px; height:60px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="white">
+                    <div class="video-play-btn">
+                        <svg viewBox="0 0 24 24">
                             <path d="M8 5v14l11-7z"/>
                         </svg>
                     </div>
@@ -298,28 +347,42 @@
         const content = document.getElementById('modalContent');
         
         if (item.type === 'photo') {
+            // Tam ekran görsel için doğru Google Drive URL'si
             const highResSrc = `https://drive.google.com/uc?export=view&id=${item.driveId}`;
             content.innerHTML = `
                 <img src="${highResSrc}" 
                      alt="${item.title}" 
                      class="modal-image"
-                     onclick="event.stopPropagation()">
+                     onclick="event.stopPropagation()"
+                     onerror="this.onerror=null; this.src='https://via.placeholder.com/800x1200/333/fff?text=Görsel+Yüklenemedi';">
             `;
         } else {
-            // Video için doğrudan Drive embed
+            // Video için pop-out butonunu gizleyen özel iframe
             content.innerHTML = `
-                <iframe src="https://drive.google.com/file/d/${item.driveId}/preview" 
-                        class="modal-video"
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen
-                        onclick="event.stopPropagation()">
-                </iframe>
+                <div class="video-container">
+                    <iframe src="https://drive.google.com/file/d/${item.driveId}/preview?autoplay=1&controls=1&modestbranding=1&showinfo=0" 
+                            class="modal-video"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen
+                            onclick="event.stopPropagation()">
+                    </iframe>
+                </div>
             `;
         }
         
         modal.style.display = "block";
         document.body.style.overflow = "hidden";
+        
+        // Modal açıldığında videoyu oynat
+        if (item.type === 'video') {
+            setTimeout(() => {
+                const iframe = content.querySelector('iframe');
+                if (iframe) {
+                    iframe.src = iframe.src.replace('autoplay=0', 'autoplay=1');
+                }
+            }, 100);
+        }
     }
     
     // Modal kapat
@@ -332,7 +395,8 @@
         const iframe = modal.querySelector('iframe');
         if (iframe) {
             // Iframe'i yeniden yükleterek videoyu durdur
-            iframe.src = iframe.src;
+            const src = iframe.src.replace('autoplay=1', 'autoplay=0');
+            iframe.src = src;
         }
     }
     
