@@ -15,20 +15,12 @@
       "driveId": "10qoRvqD1y3BoQAnHjQh2C7pGXaZ7DLgN",
       "category": "Video",
       "date": "2025-12-05"
-    },
-    {
-      "id": 1764963450551,
-      "type": "photo",
-      "title": "pht2",
-      "driveId": "1DjblECojqeVp-XRorG_YhdKdC8-UEOIp",
-      "category": "Portre",
-      "date": "2025-12-05"
     }
   ],
-  "lastUpdated": "2025-12-05T19:37:30.552Z",
-  "totalItems": 3,
+  "lastUpdated": "2025-12-05T20:21:49.445Z",
+  "totalItems": 2,
   "stats": {
-    "photos": 2,
+    "photos": 1,
     "videos": 1
   }
 }
