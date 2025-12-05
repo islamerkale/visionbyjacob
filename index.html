@@ -177,6 +177,80 @@
             letter-spacing: -0.02em;
             font-weight: 300;
         }
+        
+        /* Hero Video Background */
+        .hero-section {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .video-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .video-container video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.4) contrast(1.2);
+        }
+        
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%);
+            z-index: 1;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            padding: 0 1.5rem;
+        }
+        
+        /* Mobil için düzen */
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(3, 1fr);
+            }
+            
+            .video-container video {
+                filter: brightness(0.3) contrast(1.2);
+            }
+        }
     </style>
 </head>
 <body>
@@ -195,13 +269,42 @@
     </nav>
 </header>
 
-<!-- Hero Section -->
-<section class="fade-in" style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; padding:0 1.5rem;">
-    <div class="slide-up text-center">
-        <h1 style="font-size:clamp(3rem,10vw,6rem); margin-bottom:1.5rem; font-weight:300;">Vision by Jacob</h1>
-        <p style="font-size:clamp(1.25rem,3vw,1.5rem); letter-spacing:0.2em; opacity:0.7; font-weight:300;">PHOTOGRAPHER & VIDEOGRAPHER</p>
+<!-- Hero Section with Video Background -->
+<section class="hero-section fade-in">
+    <!-- Video Grid Background -->
+    <div class="video-background">
+        <div class="video-grid">
+            <div class="video-container">
+                <video autoplay muted loop playsinline id="video1">
+                    <source src="video-bg.mp4" type="video/mp4">
+                    Tarayıcınız video etiketini desteklemiyor.
+                </video>
+                <div class="video-overlay"></div>
+            </div>
+            <div class="video-container">
+                <video autoplay muted loop playsinline id="video2">
+                    <source src="video-cd.mp4" type="video/mp4">
+                    Tarayıcınız video etiketini desteklemiyor.
+                </video>
+                <div class="video-overlay"></div>
+            </div>
+            <div class="video-container">
+                <video autoplay muted loop playsinline id="video3">
+                    <source src="video-bg.mp4" type="video/mp4">
+                    Tarayıcınız video etiketini desteklemiyor.
+                </video>
+                <div class="video-overlay"></div>
+            </div>
+        </div>
     </div>
-    <button onclick="scrollToSection('portfolio')" class="bounce" style="position:absolute; bottom:3rem; background:none; border:none; color:white; opacity:0.7;">
+    
+    <!-- Hero Content -->
+    <div class="hero-content slide-up">
+        <h1 style="font-size:clamp(3rem,10vw,6rem); margin-bottom:1.5rem; font-weight:300;">Vision by Jacob</h1>
+        <p style="font-size:clamp(1.25rem,3vw,1.5rem); letter-spacing:0.2em; opacity:0.9; font-weight:300;">PHOTOGRAPHER & VIDEOGRAPHER</p>
+    </div>
+    
+    <button onclick="scrollToSection('portfolio')" class="bounce" style="position:absolute; bottom:3rem; background:none; border:none; color:white; opacity:0.9; z-index:2;">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M6 9l6 6 6-6"/>
         </svg>
@@ -215,8 +318,8 @@
 
         <div style="display:flex; gap:1.5rem; margin-bottom:3rem; flex-wrap:wrap;">
             <button class="filter-btn active" onclick="filterPortfolio('all')" data-filter="all">TÜMÜ</button>
-            <button class="filter-btn" onclick="filterPortfolio('photo')" data-filter="photo">PHOTOS</button>
-            <button class="filter-btn" onclick="filterPortfolio('video')" data-filter="video">VIDEOS</button>
+            <button class="filter-btn" onclick="filterPortfolio('photo')" data-filter="photo">FOTOĞRAFLAR</button>
+            <button class="filter-btn" onclick="filterPortfolio('video')" data-filter="video">VİDEOLAR</button>
             <div id="categoryFilters" style="display:flex; gap:1rem; flex-wrap:wrap; margin-left:auto;"></div>
         </div>
 
@@ -383,6 +486,13 @@
     let currentCategory = null;
     let currentFilteredItems = [];
     let currentModalIndex = -1;
+
+    // Video URLs
+    const videoUrls = [
+        'https://raw.githubusercontent.com/islamerkale/visionbyjacob/main/videos/video1.mp4',
+        'https://raw.githubusercontent.com/islamerkale/visionbyjacob/main/videos/video2.mp4',
+        'https://raw.githubusercontent.com/islamerkale/visionbyjacob/main/videos/video3.mp4'
+    ];
 
     async function loadPortfolio() {
         showLoading();
@@ -607,6 +717,27 @@
         renderPortfolio();
     }
     
+    // Video yönetimi
+    function initializeVideos() {
+        const videos = document.querySelectorAll('.video-container video');
+        
+        videos.forEach((video, index) => {
+            // Otomatik oynatmayı başlat
+            video.play().catch(e => {
+                console.log(`Video ${index + 1} otomatik oynatılamadı:`, e);
+            });
+            
+            // Video hata yönetimi
+            video.addEventListener('error', (e) => {
+                console.error(`Video ${index + 1} yüklenirken hata:`, e);
+                // Alternatif video kaynakları deneyebiliriz
+                if (index < videoUrls.length) {
+                    video.src = videoUrls[index];
+                }
+            });
+        });
+    }
+    
     // UI Helper fonksiyonları
     function showLoading() {
         document.getElementById('loading').style.display = 'flex';
@@ -641,10 +772,21 @@
     // Sayfa yüklendiğinde
     document.addEventListener('DOMContentLoaded', function() {
         loadPortfolio();
+        initializeVideos();
         
         window.addEventListener('scroll', () => {
             const h = document.getElementById('header');
             h.classList.toggle('scrolled', window.scrollY > 50);
+        });
+        
+        // Sayfa görünür olduğunda videoları yeniden başlat
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                const videos = document.querySelectorAll('.video-container video');
+                videos.forEach(video => {
+                    video.play().catch(e => console.log('Video yeniden başlatılamadı:', e));
+                });
+            }
         });
         
         setInterval(() => {
