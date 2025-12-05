@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alex Morgan - Photographer & Videographer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif; background:#000; color:#fff; overflow-x:hidden; }
+        .fade-in { animation: fadeIn 1.2s ease-in; }
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+        .slide-up { animation: slideUp 0.8s ease-out; }
+        @keyframes slideUp { from{opacity:0; transform:translateY(50px);} to{opacity:1; transform:translateY(0);} }
+        .bounce { animation: bounce 1.5s infinite; }
+        @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(10px);} }
+        .portfolio-item { position:relative; overflow:hidden; aspect-ratio:3/4; border-radius: 8px; }
+        .portfolio-item img, .portfolio-item iframe { width:100%; height:100%; object-fit:cover; transition: transform 0.7s ease; }
+        .portfolio-item:hover img { transform:scale(1.1); }
+        .portfolio-overlay { position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:1.5rem; opacity:1; }
+        .header { position:fixed; top:0; left:0; right:0; z-index:50; transition: all 0.3s ease; padding:1.5rem 0; }
+        .header.scrolled { background:rgba(0,0,0,0.8); backdrop-filter:blur(12px); padding:1rem 0; }
+        .btn-hover { transition:all 0.3s ease; cursor:pointer; }
+        .btn-hover:hover { opacity:0.7; transform:scale(1.05); }
+        .filter-btn { opacity:0.4; transition:opacity 0.3s ease; cursor:pointer; background:none; border:none; color:white; letter-spacing:0.1em; font-size:1rem; padding:0; }
+        .filter-btn:hover { opacity:0.7; }
+        .filter-btn.active { opacity:1; }
+        html { scroll-behavior:smooth; }
+        .category-badge { background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; margin-bottom: 0.5rem; display: inline-block; }
+        .item-title { font-size: 1.25rem; font-weight: 300; margin-bottom: 0.25rem; }
+        .item-type { font-size: 0.9rem; opacity: 0.7; }
+    </style>
+</head>
+<body>
+
+<header class="header" id="header">
+    <nav class="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
+        <button onclick="scrollToTop()" class="btn-hover" style="letter-spacing: 0.2em; font-weight:600;">AM</button>
+        <ul class="flex items-center gap-8 md:gap-12" style="list-style:none;">
+            <li><button onclick="scrollToSection('portfolio')" class="btn-hover">PORTFOLIO</button></li>
+            <li><button onclick="window.open('admin.html', '_blank')" class="btn-hover" style="background:#3b82f6;padding:0.5rem 1rem;border-radius:6px;">ADMIN</button></li>
+        </ul>
+    </nav>
+</header>
+
+<!-- Hero Section -->
+<section class="fade-in" style="height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; padding:0 1.5rem;">
+    <div class="slide-up text-center">
+        <h1 style="font-size:clamp(3rem,10vw,6rem); margin-bottom:1.5rem; font-weight:300;">ALEX MORGAN</h1>
+        <p style="font-size:clamp(1.25rem,3vw,1.5rem); letter-spacing:0.2em; opacity:0.7; font-weight:300;">PHOTOGRAPHER & VIDEOGRAPHER</p>
+    </div>
+    <button onclick="scrollToSection('portfolio')" class="bounce" style="position:absolute; bottom:3rem; background:none; border:none; color:white; opacity:0.7;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9l6 6 6-6"/>
+        </svg>
+    </button>
+</section>
+
+<!-- Portfolio Section -->
+<section id="portfolio" style="padding:5rem 1.5rem;">
+    <div class="max-w-7xl mx-auto">
+        <h2 style="font-size:clamp(2.5rem,8vw,4rem); margin-bottom:3rem; font-weight:300;">PORTFOLIO</h2>
+
+        <div style="display:flex; gap:1.5rem; margin-bottom:3rem; flex-wrap:wrap;">
+            <button class="filter-btn active" onclick="filterPortfolio('all')" data-filter="all">TÜMÜ</button>
+            <button class="filter-btn" onclick="filterPortfolio('photo')" data-filter="photo">FOTOĞRAFLAR</button>
+            <button class="filter-btn" onclick="filterPortfolio('video')" data-filter="video">VİDEOLAR</button>
+            <div id="categoryFilters" style="display:flex; gap:1rem; flex-wrap:wrap; margin-left:auto;">
+                <!-- Kategoriler buraya eklenecek -->
+            </div>
+        </div>
+
+        <div id="portfolio-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:2rem;"></div>
+        
+        <div id="no-content" style="display:none; text-align:center; padding:4rem; color:#666;">
+            <p style="font-size:1.5rem; margin-bottom:1rem;">Henüz içerik eklenmemiş</p>
+            <button onclick="window.open('admin.html', '_blank')" style="background:#3b82f6; color:white; border:none; padding:0.75rem 1.5rem; border-radius:6px; cursor:pointer;">
+                Admin Paneline Git
+            </button>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Portfolio verilerini yükle
+    function loadPortfolioData() {
+        const saved = localStorage.getItem('portfolioData');
+        return saved ? JSON.parse(saved) : [];
+    }
+    
+    // Tüm kategorileri bul
+    function getAllCategories() {
+        const items = loadPortfolioData();
+        const categories = new Set();
+        items.forEach(item => {
+            if (item.category) {
+                categories.add(item.category);
+            }
+        });
+        return Array.from(categories);
+    }
+    
+    // Kategori filtrelerini oluştur
+    function renderCategoryFilters() {
+        const categories = getAllCategories();
+        const container = document.getElementById('categoryFilters');
+        
+        if (categories.length > 0) {
+            container.innerHTML = categories.map(category => 
+                `<button class="filter-btn category-filter" onclick="filterByCategory('${category}')" data-category="${category}">${category.toUpperCase()}</button>`
+            ).join('');
+        }
+    }
+    
+    // Portfolio'yu render et
+    function renderPortfolio(filter = 'all', category = null) {
+        const grid = document.getElementById('portfolio-grid');
+        const noContent = document.getElementById('no-content');
+        const items = loadPortfolioData();
+        
+        // Filtreleme
+        let filteredItems = items;
+        if (filter !== 'all') {
+            filteredItems = items.filter(item => item.type === filter);
+        }
+        if (category) {
+            filteredItems = filteredItems.filter(item => item.category === category);
+        }
+        
+        // İçerik yoksa mesaj göster
+        if (filteredItems.length === 0) {
+            grid.style.display = 'none';
+            noContent.style.display = 'block';
+            return;
+        }
+        
+        grid.style.display = 'grid';
+        noContent.style.display = 'none';
+        
+        grid.innerHTML = filteredItems.map(item => {
+            if (item.type === 'photo') {
+                // Fotoğraflar için birden fazla link formatı deniyoruz
+                const imgSrc = `https://drive.google.com/thumbnail?id=${item.driveId}&sz=w1000`;
+                const fallbackSrc = `https://drive.google.com/uc?export=view&id=${item.driveId}`;
+                
+                return `<div class="portfolio-item">
+                    <img 
+                        src="${imgSrc}" 
+                        alt="${item.title}"
+                        loading="lazy"
+                        onerror="this.onerror=null; this.src='${fallbackSrc}';"
+                    >
+                    <div class="portfolio-overlay">
+                        <span class="category-badge">${item.category}</span>
+                        <div class="item-title">${item.title}</div>
+                        <div class="item-type">📸 Fotoğraf</div>
+                    </div>
+                </div>`;
+            } else {
+                return `<div class="portfolio-item">
+                    <iframe 
+                        src="https://drive.google.com/file/d/${item.driveId}/preview?autoplay=0" 
+                        frameborder="0" 
+                        allow="autoplay; encrypted-media" 
+                        allowfullscreen
+                        loading="lazy"
+                        title="${item.title}"
+                    ></iframe>
+                    <div class="portfolio-overlay">
+                        <span class="category-badge">${item.category}</span>
+                        <div class="item-title">${item.title}</div>
+                        <div class="item-type">🎬 Video</div>
+                    </div>
+                </div>`;
+            }
+        }).join('');
+    }
+    
+    // Filtreleme fonksiyonları
+    function filterPortfolio(filter) {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+        
+        document.querySelectorAll('.category-filter').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        renderPortfolio(filter);
+    }
+    
+    function filterByCategory(category) {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-category="${category}"]`).classList.add('active');
+        
+        renderPortfolio('all', category);
+    }
+    
+    // Sayfa yüklendiğinde
+    document.addEventListener('DOMContentLoaded', function() {
+        renderCategoryFilters();
+        renderPortfolio();
+    });
+    
+    // Sayfa yenilendiğinde
+    window.addEventListener('storage', function() {
+        renderCategoryFilters();
+        renderPortfolio();
+    });
+    
+    // Diğer fonksiyonlar
+    function scrollToSection(id) {
+        document.getElementById(id).scrollIntoView({behavior: 'smooth'});
+    }
+    
+    function scrollToTop() {
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+    
+    window.addEventListener('scroll', () => {
+        const h = document.getElementById('header');
+        h.classList.toggle('scrolled', window.scrollY > 50);
+    });
+</script>
+
+</body>
+</html>
