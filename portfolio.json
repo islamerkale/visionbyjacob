@@ -2,23 +2,23 @@
   "items": [
     {
       "id": 1764960497046,
-      "type": "video",
-      "title": "vde1",
-      "driveId": "10qoRvqD1y3BoQAnHjQh2C7pGXaZ7DLgN",
-      "category": "manzara",
-      "date": "2025-12-05"
-    },
-    {
-      "id": 1764960497046,
       "type": "photo",
       "title": "pht2",
       "driveId": "1mhtjD9W4v58wuO3Tlvfjy-tGbOEFvfEq",
       "category": "manzara",
       "date": "2025-12-05"
+    },
+    {
+      "id": 1764961264527,
+      "type": "video",
+      "title": "manzara",
+      "driveId": "10qoRvqD1y3BoQAnHjQh2C7pGXaZ7DLgN",
+      "category": "Video",
+      "date": "2025-12-05"
     }
   ],
-  "lastUpdated": "2025-12-05T18:48:23.373Z",
-  "totalItems": 1,
+  "lastUpdated": "2025-12-05T19:01:28.494Z",
+  "totalItems": 2,
   "stats": {
     "photos": 1,
     "videos": 1
