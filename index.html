@@ -29,6 +29,9 @@
         .category-badge { background: rgba(255,255,255,0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; margin-bottom: 0.5rem; display: inline-block; }
         .item-title { font-size: 1.25rem; font-weight: 300; margin-bottom: 0.25rem; }
         .item-type { font-size: 0.9rem; opacity: 0.7; }
+        .loading { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4rem; }
+        .spinner { width:40px; height:40px; border:4px solid rgba(255,255,255,0.3); border-top-color:#3b82f6; border-radius:50%; animation:spin 1s linear infinite; margin-bottom:1rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -38,7 +41,7 @@
         <button onclick="scrollToTop()" class="btn-hover" style="letter-spacing: 0.2em; font-weight:600;">AM</button>
         <ul class="flex items-center gap-8 md:gap-12" style="list-style:none;">
             <li><button onclick="scrollToSection('portfolio')" class="btn-hover">PORTFOLIO</button></li>
-            <li><button onclick="window.open('admin.html', '_blank')" class="btn-hover" style="background:#3b82f6;padding:0.5rem 1rem;border-radius:6px;">ADMIN</button></li>
+            <li><button onclick="window.open('update-json.html', '_blank')" class="btn-hover" style="background:#3b82f6;padding:0.5rem 1rem;border-radius:6px;">ADMIN</button></li>
         </ul>
     </nav>
 </header>
@@ -65,34 +68,70 @@
             <button class="filter-btn active" onclick="filterPortfolio('all')" data-filter="all">TÜMÜ</button>
             <button class="filter-btn" onclick="filterPortfolio('photo')" data-filter="photo">FOTOĞRAFLAR</button>
             <button class="filter-btn" onclick="filterPortfolio('video')" data-filter="video">VİDEOLAR</button>
-            <div id="categoryFilters" style="display:flex; gap:1rem; flex-wrap:wrap; margin-left:auto;">
-                <!-- Kategoriler buraya eklenecek -->
-            </div>
+            <div id="categoryFilters" style="display:flex; gap:1rem; flex-wrap:wrap; margin-left:auto;"></div>
         </div>
 
-        <div id="portfolio-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:2rem;"></div>
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Portfolio yükleniyor...</p>
+        </div>
+
+        <!-- Portfolio Grid -->
+        <div id="portfolio-grid" style="display:none; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:2rem;"></div>
         
+        <!-- No Content Message -->
         <div id="no-content" style="display:none; text-align:center; padding:4rem; color:#666;">
             <p style="font-size:1.5rem; margin-bottom:1rem;">Henüz içerik eklenmemiş</p>
-            <button onclick="window.open('admin.html', '_blank')" style="background:#3b82f6; color:white; border:none; padding:0.75rem 1.5rem; border-radius:6px; cursor:pointer;">
+            <button onclick="window.open('update-json.html', '_blank')" style="background:#3b82f6; color:white; border:none; padding:0.75rem 1.5rem; border-radius:6px; cursor:pointer;">
                 Admin Paneline Git
+            </button>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error-message" style="display:none; text-align:center; padding:4rem; color:#ef4444;">
+            <p style="font-size:1.5rem; margin-bottom:1rem;">Portfolio yüklenirken hata oluştu</p>
+            <button onclick="loadPortfolio()" style="background:#3b82f6; color:white; border:none; padding:0.75rem 1.5rem; border-radius:6px; cursor:pointer;">
+                Tekrar Dene
             </button>
         </div>
     </div>
 </section>
 
 <script>
-    // Portfolio verilerini yükle
-    function loadPortfolioData() {
-        const saved = localStorage.getItem('portfolioData');
-        return saved ? JSON.parse(saved) : [];
+    // GitHub Raw URL'nizi buraya girin
+    // Örnek: https://raw.githubusercontent.com/kullaniciadiniz/repo-adiniz/main/portfolio.json
+    const PORTFOLIO_JSON_URL = 'https://raw.githubusercontent.com/kullaniciadiniz/repo-adiniz/main/portfolio.json';
+    
+    let portfolioItems = [];
+    let currentFilter = 'all';
+    let currentCategory = null;
+
+    // Portfolio verilerini GitHub'dan yükle
+    async function loadPortfolio() {
+        showLoading();
+        
+        try {
+            const response = await fetch(PORTFOLIO_JSON_URL + '?t=' + Date.now()); // Cache bypass
+            if (!response.ok) throw new Error('JSON dosyası bulunamadı');
+            
+            const data = await response.json();
+            portfolioItems = data.items || [];
+            
+            hideLoading();
+            renderCategoryFilters();
+            renderPortfolio();
+        } catch (error) {
+            console.error('Portfolio yükleme hatası:', error);
+            hideLoading();
+            showError();
+        }
     }
     
     // Tüm kategorileri bul
     function getAllCategories() {
-        const items = loadPortfolioData();
         const categories = new Set();
-        items.forEach(item => {
+        portfolioItems.forEach(item => {
             if (item.category) {
                 categories.add(item.category);
             }
@@ -109,22 +148,23 @@
             container.innerHTML = categories.map(category => 
                 `<button class="filter-btn category-filter" onclick="filterByCategory('${category}')" data-category="${category}">${category.toUpperCase()}</button>`
             ).join('');
+        } else {
+            container.innerHTML = '';
         }
     }
     
     // Portfolio'yu render et
-    function renderPortfolio(filter = 'all', category = null) {
+    function renderPortfolio() {
         const grid = document.getElementById('portfolio-grid');
         const noContent = document.getElementById('no-content');
-        const items = loadPortfolioData();
         
         // Filtreleme
-        let filteredItems = items;
-        if (filter !== 'all') {
-            filteredItems = items.filter(item => item.type === filter);
+        let filteredItems = portfolioItems;
+        if (currentFilter !== 'all') {
+            filteredItems = portfolioItems.filter(item => item.type === currentFilter);
         }
-        if (category) {
-            filteredItems = filteredItems.filter(item => item.category === category);
+        if (currentCategory) {
+            filteredItems = filteredItems.filter(item => item.category === currentCategory);
         }
         
         // İçerik yoksa mesaj göster
@@ -139,7 +179,6 @@
         
         grid.innerHTML = filteredItems.map(item => {
             if (item.type === 'photo') {
-                // Fotoğraflar için birden fazla link formatı deniyoruz
                 const imgSrc = `https://drive.google.com/thumbnail?id=${item.driveId}&sz=w1000`;
                 const fallbackSrc = `https://drive.google.com/uc?export=view&id=${item.driveId}`;
                 
@@ -178,6 +217,9 @@
     
     // Filtreleme fonksiyonları
     function filterPortfolio(filter) {
+        currentFilter = filter;
+        currentCategory = null;
+        
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('active');
         });
@@ -187,29 +229,36 @@
             btn.classList.remove('active');
         });
         
-        renderPortfolio(filter);
+        renderPortfolio();
     }
     
     function filterByCategory(category) {
+        currentCategory = category;
+        currentFilter = 'all';
+        
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         document.querySelector(`[data-category="${category}"]`).classList.add('active');
         
-        renderPortfolio('all', category);
+        renderPortfolio();
     }
     
-    // Sayfa yüklendiğinde
-    document.addEventListener('DOMContentLoaded', function() {
-        renderCategoryFilters();
-        renderPortfolio();
-    });
+    // UI Helper fonksiyonları
+    function showLoading() {
+        document.getElementById('loading').style.display = 'flex';
+        document.getElementById('portfolio-grid').style.display = 'none';
+        document.getElementById('no-content').style.display = 'none';
+        document.getElementById('error-message').style.display = 'none';
+    }
     
-    // Sayfa yenilendiğinde
-    window.addEventListener('storage', function() {
-        renderCategoryFilters();
-        renderPortfolio();
-    });
+    function hideLoading() {
+        document.getElementById('loading').style.display = 'none';
+    }
+    
+    function showError() {
+        document.getElementById('error-message').style.display = 'block';
+    }
     
     // Diğer fonksiyonlar
     function scrollToSection(id) {
@@ -220,9 +269,19 @@
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
     
-    window.addEventListener('scroll', () => {
-        const h = document.getElementById('header');
-        h.classList.toggle('scrolled', window.scrollY > 50);
+    // Sayfa yüklendiğinde
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPortfolio();
+        
+        window.addEventListener('scroll', () => {
+            const h = document.getElementById('header');
+            h.classList.toggle('scrolled', window.scrollY > 50);
+        });
+        
+        // Her 30 saniyede bir yenile (isteğe bağlı)
+        setInterval(() => {
+            loadPortfolio();
+        }, 30000);
     });
 </script>
 
