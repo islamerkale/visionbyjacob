@@ -292,35 +292,39 @@
     
     // Modal aç
     function openModal(index) {
-        currentModalIndex = index;
-        const item = currentFilteredItems[index];
-        const modal = document.getElementById('fullscreenModal');
-        const content = document.getElementById('modalContent');
+    currentModalIndex = index;
+    const item = currentFilteredItems[index];
+    const modal = document.getElementById('fullscreenModal');
+    const content = document.getElementById('modalContent');
+    
+    if (item.type === 'photo') {
+        // Aynı linki kullan ama daha büyük boyutta
+        const highResSrc = `https://drive.google.com/thumbnail?id=${item.driveId}&sz=w3840`;
+        const fallbackSrc = `https://drive.google.com/uc?export=view&id=${item.driveId}`;
         
-        if (item.type === 'photo') {
-            const highResSrc = `https://drive.google.com/uc?export=view&id=${item.driveId}`;
-            content.innerHTML = `
-                <img src="${highResSrc}" 
-                     alt="${item.title}" 
-                     class="modal-image"
-                     onclick="event.stopPropagation()">
-            `;
-        } else {
-            // Video için doğrudan Drive embed
-            content.innerHTML = `
-                <iframe src="https://drive.google.com/file/d/${item.driveId}/preview" 
-                        class="modal-video"
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen
-                        onclick="event.stopPropagation()">
-                </iframe>
-            `;
-        }
-        
-        modal.style.display = "block";
-        document.body.style.overflow = "hidden";
+        content.innerHTML = `
+            <img src="${highResSrc}" 
+                 alt="${item.title}" 
+                 class="modal-image"
+                 onerror="this.onerror=null; this.src='${fallbackSrc}';"
+                 onclick="event.stopPropagation()">
+        `;
+    } else {
+        // Video kodu aynı kalacak
+        content.innerHTML = `
+            <iframe src="https://drive.google.com/file/d/${item.driveId}/preview" 
+                    class="modal-video"
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen
+                    onclick="event.stopPropagation()">
+            </iframe>
+        `;
     }
+    
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden";
+}
     
     // Modal kapat
     function closeModal() {
