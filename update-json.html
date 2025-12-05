@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio JSON Yöneticisi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #0f172a; color: #fff; font-family: sans-serif; padding: 2rem; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .form-section { background: #1e293b; padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; }
+        input, select, textarea { width: 100%; padding: 0.75rem; background: #334155; color: #fff; border: 1px solid #475569; border-radius: 6px; margin-bottom: 1rem; }
+        button { padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .item-card { background: #1e293b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        .item-card img { width: 100px; height: 100px; object-fit: cover; border-radius: 6px; }
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-secondary { background: #64748b; color: white; margin-left: 0.5rem; }
+        .btn-secondary:hover { background: #475569; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; margin-left: 0.5rem; }
+        .btn-danger:hover { background: #dc2626; }
+        .message { padding: 0.75rem; border-radius: 6px; margin-top: 1rem; display: none; }
+        .success { background: #10b981; }
+        .error { background: #ef4444; }
+        .warning { background: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold mb-6">📁 Portfolio JSON Yöneticisi</h1>
+        
+        <!-- GitHub Repo Ayarları -->
+        <div class="form-section">
+            <h2 class="text-xl font-semibold mb-4">⚙️ GitHub Ayarları</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block mb-2">GitHub Kullanıcı Adı:</label>
+                    <input type="text" id="githubUser" placeholder="kullaniciadiniz" />
+                </div>
+                <div>
+                    <label class="block mb-2">Repo Adı:</label>
+                    <input type="text" id="repoName" placeholder="repo-adiniz" />
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2">GitHub Token (Opsiyonel):</label>
+                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+                <small class="text-gray-400">Sadece private repo için gerekli. Public repo için boş bırakın.</small>
+            </div>
+            <button onclick="loadFromGitHub()" class="btn-primary">📥 GitHub'dan Yükle</button>
+        </div>
+
+        <!-- İçerik Yönetimi -->
+        <div class="form-section">
+            <h2 class="text-xl font-semibold mb-4">➕ Yeni İçerik Ekle</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block mb-2">İçerik Türü:</label>
+                    <select id="typeSelect" onchange="toggleFields()">
+                        <option value="photo">Fotoğraf</option>
+                        <option value="video">Video</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-2">İçerik Başlığı:</label>
+                    <input type="text" id="titleInput" placeholder="Örn: Doğa Manzarası" />
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block mb-2">Google Drive ID:</label>
+                <input type="text" id="idInput" placeholder="Örn: 1DjblECojqeVp-XRorG_YhdKdC8-UEOIp" />
+                <small class="text-gray-400">Drive linkindeki ID'yi girin</small>
+            </div>
+            
+            <div id="photoFields" class="mb-4">
+                <label class="block mb-2">Kategori:</label>
+                <input type="text" id="categoryInput" placeholder="Örn: Portre, Manzara, Ürün" />
+            </div>
+            
+            <button onclick="addNewItem()" class="btn-primary">➕ İçerik Ekle</button>
+        </div>
+        
+        <!-- Mevcut İçerikler -->
+        <div class="form-section">
+            <h2 class="text-xl font-semibold mb-4">📋 Mevcut İçerikler</h2>
+            <div id="itemsList" class="mb-4">
+                <p class="text-gray-400">GitHub'dan veri yükleyin...</p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block mb-2">JSON Verisi:</label>
+                <textarea id="jsonOutput" rows="10" readonly class="font-mono text-sm"></textarea>
+            </div>
+            
+            <button onclick="generateJSON()" class="btn-success">🔄 JSON Oluştur</button>
+            <button onclick="copyToClipboard()" class="btn-secondary">📋 Kopyala</button>
+            <button onclick="downloadJSON()" class="btn-primary">💾 İndir</button>
+            <button onclick="clearAll()" class="btn-danger">🗑️ Tümünü Sil</button>
+        </div>
+        
+        <!-- Talimatlar -->
+        <div class="form-section">
+            <h2 class="text-xl font-semibold mb-4">📚 Nasıl Kullanılır?</h2>
+            <ol class="list-decimal pl-5 space-y-2 text-gray-300">
+                <li>GitHub bilgilerinizi girin ve "GitHub'dan Yükle" butonuna tıklayın</li>
+                <li>Yeni içerikler ekleyin veya mevcutları düzenleyin</li>
+                <li>"JSON Oluştur" butonuyla verilerinizi görün</li>
+                <li>Oluşan JSON'u kopyalayın</li>
+                <li>GitHub reposuna gidip portfolio.json dosyasını güncelleyin</li>
+                <li>Veya JSON'u indirip manuel olarak yükleyin</li>
+            </ol>
+            <p class="mt-4 text-yellow-300">⚠️ Dikkat: Bu araç sadece JSON oluşturur. GitHub'a otomatik yükleme yapmaz.</p>
+        </div>
+        
+        <!-- Mesaj Alanı -->
+        <div id="message" class="message"></div>
+        
+        <!-- Site Önizleme -->
+        <div class="form-section">
+            <h2 class="text-xl font-semibold mb-4">👁️ Kontrol</h2>
+            <button onclick="window.open('index.html', '_blank')" class="btn-secondary">🔗 Siteyi Görüntüle</button>
+        </div>
+    </div>
+
+    <script>
+        let portfolioItems = [];
+        let githubConfig = {
+            user: '',
+            repo: '',
+            token: ''
+        };
+
+        // Sayfa yüklendiğinde localStorage'dan ayarları yükle
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedConfig = localStorage.getItem('githubConfig');
+            if (savedConfig) {
+                githubConfig = JSON.parse(savedConfig);
+                document.getElementById('githubUser').value = githubConfig.user || '';
+                document.getElementById('repoName').value = githubConfig.repo || '';
+                document.getElementById('githubToken').value = githubConfig.token || '';
+            }
+            
+            toggleFields();
+        });
+
+        function toggleFields() {
+            const type = document.getElementById('typeSelect').value;
+            const photoFields = document.getElementById('photoFields');
+            photoFields.style.display = type === 'photo' ? 'block' : 'none';
+        }
+
+        function saveGitHubConfig() {
+            githubConfig = {
+                user: document.getElementById('githubUser').value.trim(),
+                repo: document.getElementById('repoName').value.trim(),
+                token: document.getElementById('githubToken').value.trim()
+            };
+            localStorage.setItem('githubConfig', JSON.stringify(githubConfig));
+        }
+
+        async function loadFromGitHub() {
+            saveGitHubConfig();
+            
+            if (!githubConfig.user || !githubConfig.repo) {
+                showMessage('⚠️ GitHub kullanıcı adı ve repo adı gerekli!', 'error');
+                return;
+            }
+
+            try {
+                const url = `https://raw.githubusercontent.com/${githubConfig.user}/${githubConfig.repo}/main/portfolio.json`;
+                const response = await fetch(url + '?t=' + Date.now());
+                
+                if (!response.ok) throw new Error('Dosya bulunamadı');
+                
+                const data = await response.json();
+                portfolioItems = data.items || [];
+                renderItemsList();
+                generateJSON();
+                showMessage('✅ GitHub\'dan veriler yüklendi!', 'success');
+            } catch (error) {
+                showMessage(`❌ Hata: ${error.message}. Boş bir liste oluşturuldu.`, 'warning');
+                portfolioItems = [];
+                renderItemsList();
+                generateJSON();
+            }
+        }
+
+        function addNewItem() {
+            const type = document.getElementById('typeSelect').value;
+            const title = document.getElementById('titleInput').value.trim();
+            const driveId = document.getElementById('idInput').value.trim();
+            const category = type === 'photo' ? document.getElementById('categoryInput').value.trim() : 'Video';
+
+            if (!title || !driveId) {
+                showMessage('⚠️ Lütfen başlık ve Drive ID girin!', 'error');
+                return;
+            }
+
+            const newItem = {
+                id: Date.now(),
+                type: type,
+                title: title,
+                driveId: driveId,
+                category: category || 'Genel',
+                date: new Date().toISOString().split('T')[0]
+            };
+
+            portfolioItems.push(newItem);
+            renderItemsList();
+            generateJSON();
+            clearForm();
+            showMessage('✅ İçerik eklendi!', 'success');
+        }
+
+        function removeItem(itemId) {
+            portfolioItems = portfolioItems.filter(item => item.id !== itemId);
+            renderItemsList();
+            generateJSON();
+            showMessage('🗑️ İçerik silindi!', 'error');
+        }
+
+        function renderItemsList() {
+            const itemsList = document.getElementById('itemsList');
+            
+            if (portfolioItems.length === 0) {
+                itemsList.innerHTML = '<p class="text-gray-400">Henüz içerik eklenmemiş.</p>';
+                return;
+            }
+            
+            itemsList.innerHTML = portfolioItems.map(item => `
+                <div class="item-card flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div>
+                            ${item.type === 'photo' 
+                                ? `<img src="https://drive.google.com/thumbnail?id=${item.driveId}&sz=w200" 
+                                     alt="${item.title}"
+                                     onerror="this.src='https://via.placeholder.com/100/1e293b/64748b?text=${item.type}'">`
+                                : `<div style="width:100px;height:100px;background:#475569;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+                                     <span style="font-size:40px;">🎬</span>
+                                   </div>`
+                            }
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">${item.title}</h3>
+                            <p class="text-gray-400 text-sm">
+                                ${item.type === 'photo' ? '📸 Fotoğraf' : '🎬 Video'} | 
+                                Kategori: ${item.category} | 
+                                ID: ${item.driveId.substring(0, 15)}...
+                            </p>
+                            <p class="text-gray-500 text-xs">Eklenme: ${item.date}</p>
+                        </div>
+                    </div>
+                    <button onclick="removeItem(${item.id})" class="btn-danger">Sil</button>
+                </div>
+            `).join('');
+        }
+
+        function generateJSON() {
+            const jsonData = {
+                items: portfolioItems,
+                lastUpdated: new Date().toISOString(),
+                totalItems: portfolioItems.length,
+                stats: {
+                    photos: portfolioItems.filter(item => item.type === 'photo').length,
+                    videos: portfolioItems.filter(item => item.type === 'video').length
+                }
+            };
+            
+            document.getElementById('jsonOutput').value = JSON.stringify(jsonData, null, 2);
+        }
+
+        function copyToClipboard() {
+            const jsonOutput = document.getElementById('jsonOutput');
+            jsonOutput.select();
+            jsonOutput.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(jsonOutput.value);
+            showMessage('📋 JSON panoya kopyalandı!', 'success');
+        }
+
+        function downloadJSON() {
+            const jsonOutput = document.getElementById('jsonOutput').value;
+            const blob = new Blob([jsonOutput], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'portfolio.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            showMessage('💾 JSON dosyası indirildi!', 'success');
+        }
+
+        function clearAll() {
+            if (confirm('Tüm içerikleri silmek istediğinize emin misiniz?')) {
+                portfolioItems = [];
+                renderItemsList();
+                generateJSON();
+                showMessage('🗑️ Tüm içerikler silindi!', 'error');
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('titleInput').value = '';
+            document.getElementById('idInput').value = '';
+            document.getElementById('categoryInput').value = '';
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
