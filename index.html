@@ -255,19 +255,16 @@
 </head>
 <body>
 
-<header class="header" id="header">
-    <nav class="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between">
-        <div class="flex-1"></div>
-        <ul class="flex items-center gap-8 md:gap-12" style="list-style:none;">
-            <li><button onclick="scrollToSection('portfolio')" class="btn-hover" style="letter-spacing: 0.1em;">PORTFOLIO</button></li>
-            <li><button onclick="scrollToSection('about')" class="btn-hover" style="letter-spacing: 0.1em;">ABOUT</button></li>
-            <li><button onclick="scrollToSection('contact')" class="btn-hover" style="letter-spacing: 0.1em;">CONTACT</button></li>
-        </ul>
-        <div class="flex-1 flex justify-end">
-            <button onclick="window.open('update-json.html', '_blank')" class="btn-hover" style="background:#3b82f6;padding:0.5rem 1rem;border-radius:6px;">ADMIN</button>
-        </div>
-    </nav>
-</header>
+    <header class="header" id="header">
+        <nav class="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-center">
+            <ul class="flex items-center gap-8 md:gap-12" style="list-style:none;">
+                <li><button onclick="scrollToSection('portfolio')" class="btn-hover" style="letter-spacing: 0.1em;">PORTFOLIO</button></li>
+                <li><button onclick="scrollToSection('about')" class="btn-hover" style="letter-spacing: 0.1em;">ABOUT</button></li>
+                <li><button onclick="scrollToSection('contact')" class="btn-hover" style="letter-spacing: 0.1em;">CONTACT</button></li>
+            </ul>
+        </nav>
+    </header>
+    
 
 <!-- Hero Section with Video Background -->
 <section class="hero-section fade-in">
@@ -318,8 +315,8 @@
 
         <div style="display:flex; gap:1.5rem; margin-bottom:3rem; flex-wrap:wrap;">
             <button class="filter-btn active" onclick="filterPortfolio('all')" data-filter="all">TÜMÜ</button>
-            <button class="filter-btn" onclick="filterPortfolio('photo')" data-filter="photo">FOTOĞRAFLAR</button>
-            <button class="filter-btn" onclick="filterPortfolio('video')" data-filter="video">VİDEOLAR</button>
+            <button class="filter-btn" onclick="filterPortfolio('photo')" data-filter="photo">PHOTOS</button>
+            <button class="filter-btn" onclick="filterPortfolio('video')" data-filter="video">VIDEOS</button>
             <div id="categoryFilters" style="display:flex; gap:1rem; flex-wrap:wrap; margin-left:auto;"></div>
         </div>
 
